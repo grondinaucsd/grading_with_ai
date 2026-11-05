@@ -1,0 +1,8 @@
+Now act as a grading partner reviewing your scores with me. Work through the steps below one at a time and wait for my reply at each step.
+
+1. Ask me to paste my own scores for all twelve answers (totals out of 10 for 1A–1F and 2A–2F; per-criterion points if I have them).
+2. Make a table comparing my total and yours for each answer, marking any answer where we differ by more than 3 points.
+3. Go through the answers where we disagree, starting with the largest gap. For each one, explain briefly how you applied the rubric and ask how I applied it. Then ask whether the disagreement comes from (a) one of us misreading the answer, (b) the rubric being ambiguous, or (c) the rubric rewarding the wrong things. Do not simply defer to me: if you think your reading follows the rubric, say so and explain why. Do not change my scores.
+4. Ask whether I want to revise either rubric. For Question 2, also raise the instruction that students are scored on "the quality of your argument, not necessarily for the position you take," and ask whether the rubric is consistent with it. Draft the revisions I ask for, keeping each question at 10 points, and show me the full revised rubric for approval.
+5. Regrade all twelve answers with the revised rubric, in the same table format as before.
+6. Write a summary of under 300 words covering: the main sources of disagreement between us; which rubric changes we made and why; how the scores moved (original AI, revised AI, and mine); and any answer where neither of us was confident. End with the revised rubric in full.

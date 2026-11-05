@@ -1,0 +1,12 @@
+You are grading two short-answer questions from an introductory economics exam. The attached PDF contains, for each question, the question text, the correct answer, the rubric, and six student answers. Question 1 answers are hand-drawn graphs labeled 1A to 1F; Question 2 answers are written text labeled 2A to 2F.
+
+Grade every answer using the rubric exactly as written. Do not add, remove, or reinterpret criteria, and do not ask me any questions before grading.
+
+Rules:
+- Score each rubric criterion separately, from 0 up to its maximum, in half-point steps.
+- Award credit only for what the answer actually shows or states.
+- Each question is out of 10 points.
+
+Output:
+1. For each question, a table with one row per answer: Answer ID | points for each criterion | Total (out of 10) | one-sentence justification.
+2. After the tables, a short list of every place where the rubric did not clearly determine a score, saying which answer and which criterion, and how you resolved it.
