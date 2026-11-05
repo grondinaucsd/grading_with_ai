@@ -59,6 +59,10 @@ nav h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--
 #view{overflow:auto;padding:20px;display:flex;flex-direction:column;align-items:center}
 #view .label{align-self:stretch;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
 #view .label h2{margin:0;font-size:20px}
+.qbox{align-self:stretch;max-width:760px;margin:0 auto 16px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;font-size:14px}
+.qbox .qlabel{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+.qbox p{margin:0 0 6px}.qbox p:last-child{margin:0}
+#view .label,#answerCanvas{width:100%;max-width:760px}
 #answerCanvas{max-width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
 
 aside{border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
@@ -133,6 +137,7 @@ td.num{font-variant-numeric:tabular-nums}
   <div id="main">
     <nav id="nav"></nav>
     <section id="view">
+      <div class="qbox hidden" id="qBox"><div class="qlabel" id="qLabel"></div><div id="qText"></div></div>
       <div class="label"><h2 id="ansTitle"></h2><span class="small" id="ansQ"></span></div>
       <canvas id="answerCanvas"></canvas>
     </section>
@@ -217,6 +222,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 let pdf = null;
 const pageCanvas = {};
 const rubric = {1:[], 2:[]};
+const question = {1:'', 2:''};
 let state = {};
 let cur = 0;
 let keyQ = 1;
@@ -258,6 +264,8 @@ $('file').addEventListener('change', async ev => {
     }
     rubric[1] = parseRubric(texts[1]);
     rubric[2] = parseRubric(texts[4]);
+    question[1] = parseQuestion(texts[1]);
+    question[2] = parseQuestion(texts[4]);
     [1,2].forEach(q => {
       const sum = rubric[q].reduce((t,r)=>t+r.pts,0);
       if(!rubric[q].length || sum !== 10) throw new Error('Could not read the rubric for Question ' + q + ' from the packet.');
@@ -286,6 +294,21 @@ function parseRubric(text){
     out.push({pts: parseFloat(parts[k]), text: label});
   }
   return out;
+}
+function parseQuestion(text){
+  const m = text.match(/Question:\s*(.+?)\s*Correct answer/);
+  return m ? m[1].trim() : '';
+}
+function showQuestion(q){
+  const box = $('qBox'), t = question[q];
+  if(!t){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  $('qLabel').textContent = 'Question ' + q;
+  const out = $('qText'); out.innerHTML = '';
+  const cut = t.indexOf(' \u201C');
+  (cut > 0 ? [t.slice(0, cut), t.slice(cut + 1)] : [t]).forEach(par => {
+    const el = document.createElement('p'); el.textContent = par; out.appendChild(el);
+  });
 }
 async function renderPage(p){
   const page = await pdf.getPage(p);
@@ -344,6 +367,7 @@ function show(idx){
   cur = idx;
   const a = ANSWERS[idx], s = state[a.id];
   s.seen = true;
+  showQuestion(a.q);
   $('ansTitle').textContent = 'Answer ' + a.id;
   $('ansQ').textContent = 'Question ' + a.q + ' · ' + (idx+1) + ' of ' + ANSWERS.length;
   drawCrop($('answerCanvas'), pageCanvas[a.page], a.box);
