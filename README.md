@@ -2,7 +2,7 @@
 
 This activity asks you to grade a small set of real, anonymized student answers by hand, then have an AI tool grade the same answers with the same rubric, and finally review the rubric together with the AI. Your scores and reflections, submitted through two short forms, will be compared across participants at the workshop.
 
-The **activity packet** (two questions, their answer keys and rubrics, and six student answers to each) was sent to you by email. It is not posted here.
+The **activity packet** (two questions, their answer keys and rubrics, and six student answers to each) is in this [UCSD Google Drive folder](https://drive.google.com/drive/folders/1rp55a_t-X90_Qnf5uoQRV3_OkR-khdxR?usp=sharing), which opens with a UCSD Google account. Download the PDF from the folder before you start; you will upload it to your AI tool in step 2. Because the packet contains student work, please don't share it outside the workshop.
 
 ## Before you start
 
