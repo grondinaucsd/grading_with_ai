@@ -69,7 +69,7 @@ The instruction not to defer is deliberate. AI tools tend to agree with whoever 
 
 There are two short forms. Submit Form 1 before you use any AI.
 
-**Form 1: your grading** — [link]
+**Form 1: your grading** — [open Form 1](https://docs.google.com/forms/d/1nxWAVpaYkHzenKX9qbnDvPML2Vk6s8QwLQFauYNCzB4/viewform)
 
 - Your total out of 10 for each answer, 1A–1F and 2A–2F
 - Points per criterion (optional)
