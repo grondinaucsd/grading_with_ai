@@ -67,7 +67,7 @@ The instruction not to defer is deliberate. AI tools tend to agree with whoever 
 
 ## What to record
 
-There are two short forms. Submit Form 1 before you use any AI.
+There are two short forms. Submit Form 1 before you use any AI. To keep these instructions open while you fill them in, open each form in a new tab: Ctrl-click (Windows) or Cmd-click (Mac) the link, or right-click it and choose "Open link in new tab."
 
 **Form 1: your grading** — [open Form 1](https://docs.google.com/forms/d/e/1FAIpQLSeWjJ8dz1uSMmJNByd-xbR6m0C4XzxSkOE7rNajwoc9_lu98A/viewform)
 
