@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grading Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1d2330; --muted:#5d6675; --line:#dde1e7;
+  --accent:#1f5fbf; --accent-soft:#e7effb; --on:#1f7a4d; --on-soft:#e5f4ec;
+  --warn:#a15c00; --warn-soft:#fdf1df; --shadow:0 1px 2px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c; --panel:#1c2027; --ink:#e7eaf0; --muted:#9aa3b2; --line:#2e343e;
+    --accent:#7fb0ff; --accent-soft:#1f2b40; --on:#6fd3a0; --on-soft:#173528;
+    --warn:#f0b25a; --warn-soft:#3a2c17; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+.hidden{display:none !important}
+
+/* start screen */
+#start{max-width:640px;margin:48px auto;padding:0 16px}
+#start h1{font-size:24px;margin:0 0 12px}
+#start p{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;box-shadow:var(--shadow)}
+.filebtn{display:inline-block;background:var(--accent);color:#fff;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .filebtn{color:#0d1320}}
+#startMsg{margin-top:12px;font-weight:600}
+#startMsg.err{color:#c0392b}
+
+/* top bar */
+#app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header .title{font-weight:700}
+header .meta{color:var(--muted);font-size:13px}
+header .spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0d1320}}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+#main{display:grid;grid-template-columns:150px 1fr 380px;min-height:0}
+nav{border-right:1px solid var(--line);overflow:auto;padding:10px 8px;background:var(--panel)}
+nav h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:10px 8px 6px}
+.navitem{display:flex;justify-content:space-between;width:100%;border:0;background:none;border-radius:6px;padding:6px 8px;text-align:left}
+.navitem:hover{background:var(--accent-soft)}
+.navitem.cur{background:var(--accent-soft);font-weight:700}
+.navitem .sc{color:var(--muted);font-variant-numeric:tabular-nums}
+.navitem.seen .sc{color:var(--ink)}
+.navitem .flagdot{color:var(--warn)}
+
+#view{overflow:auto;padding:20px;display:flex;flex-direction:column;align-items:center}
+#view .label{align-self:stretch;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+#view .label h2{margin:0;font-size:20px}
+#answerCanvas{max-width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
+
+aside{border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.total{display:flex;align-items:baseline;gap:6px}
+.total .num{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.total .of{color:var(--muted)}
+.item{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:start;width:100%;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:10px}
+.item:hover{border-color:var(--accent)}
+.item .key{display:inline-grid;place-items:center;width:22px;height:22px;border:1px solid var(--line);border-radius:5px;font-size:12px;color:var(--muted)}
+.item .pts{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.item.on{border-color:var(--on);background:var(--on-soft)}
+.item.on .pts{color:var(--on)}
+.item .txt{font-size:14px}
+.row{display:flex;align-items:center;gap:8px}
+.adj button{width:34px;height:32px;border:1px solid var(--line);background:var(--panel);border-radius:6px;font-weight:700}
+.adj .val{min-width:48px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.small{font-size:13px;color:var(--muted)}
+textarea{width:100%;min-height:60px;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical}
+.flag{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:8px}
+.flag.on{border-color:var(--warn);background:var(--warn-soft)}
+.navbtns{display:flex;gap:8px}
+.navbtns .btn{flex:1}
+.keys{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 16px;z-index:10}
+.sheet{background:var(--panel);border-radius:12px;max-width:900px;width:100%;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.sheet h2{margin:0 0 10px}
+.sheet canvas{max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs .btn.cur{border-color:var(--accent);background:var(--accent-soft)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums}
+.notice{border-radius:8px;padding:10px 12px;background:var(--warn-soft);color:var(--ink);margin:10px 0}
+
+@media (max-width: 900px){
+  #main{grid-template-columns:1fr}
+  nav{display:flex;flex-wrap:wrap;gap:4px;border-right:0;border-bottom:1px solid var(--line)}
+  nav h3{width:100%}
+  .navitem{width:auto;gap:8px}
+  aside{border-left:0;border-top:1px solid var(--line)}
+  #app{height:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- Start screen -->
+<div id="start">
+  <h1>Grading tool for the AI grading activity</h1>
+  <div class="card">
+    <p style="margin-top:0;color:var(--ink)">This tool works like Gradescope: you see one answer at a time, click the rubric items that apply, and add a point adjustment if needed. It keeps a rough record of the time you spend on each answer, and at the end it opens Form 1 with your scores filled in.</p>
+    <p><strong style="color:var(--ink)">Start by opening the activity packet PDF</strong> you downloaded from the Google Drive folder. The file stays on your computer: it is read by your browser and never uploaded.</p>
+    <label class="filebtn">Choose the packet PDF<input id="file" type="file" accept="application/pdf" class="hidden"></label>
+    <div id="startMsg"></div>
+    <p class="small">Your progress is saved in this browser, so if you close the tab you can reopen the packet and continue. Instructions: <a href="https://github.com/grondinaucsd/grading_with_ai" target="_blank" rel="noopener">activity page</a>.</p>
+  </div>
+</div>
+
+<!-- Grading app -->
+<div id="app" class="hidden">
+  <header>
+    <span class="title">Grading tool</span>
+    <span class="meta" id="progress"></span>
+    <span class="spacer"></span>
+    <button class="btn" id="showKey">Question &amp; answer key</button>
+    <button class="btn primary" id="finish">Finish &amp; review</button>
+  </header>
+  <div id="main">
+    <nav id="nav"></nav>
+    <section id="view">
+      <div class="label"><h2 id="ansTitle"></h2><span class="small" id="ansQ"></span></div>
+      <canvas id="answerCanvas"></canvas>
+    </section>
+    <aside>
+      <div class="total"><span class="num" id="total">0</span><span class="of">/ 10</span></div>
+      <div id="items" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div>
+        <div class="small" style="margin-bottom:6px">Point adjustment</div>
+        <div class="row adj"><button id="adjMinus" aria-label="Subtract half a point">−</button><span class="val" id="adjVal">0</span><button id="adjPlus" aria-label="Add half a point">+</button><span class="small">in half-point steps</span></div>
+      </div>
+      <label class="flag" id="flagBox"><input type="checkbox" id="flag"> <span>The rubric doesn't clearly settle the score for this answer</span></label>
+      <div>
+        <div class="small" style="margin-bottom:6px">Note (optional)</div>
+        <textarea id="note" placeholder="Anything you want to remember about this answer"></textarea>
+      </div>
+      <div class="navbtns"><button class="btn" id="prev">← Previous</button><button class="btn primary" id="next">Next →</button></div>
+      <div class="keys">Shortcuts: <kbd>1</kbd>–<kbd>5</kbd> toggle rubric items · <kbd>+</kbd> <kbd>−</kbd> adjust · <kbd>←</kbd> <kbd>→</kbd> previous / next · <kbd>F</kbd> flag</div>
+    </aside>
+  </div>
+</div>
+
+<!-- Question & key overlay -->
+<div class="overlay hidden" id="keyOverlay">
+  <div class="sheet">
+    <div class="row" style="justify-content:space-between"><h2>Question, answer key and rubric</h2><button class="btn" id="closeKey">Close</button></div>
+    <div class="tabs"><button class="btn" data-q="1">Question 1</button><button class="btn" data-q="2">Question 2</button></div>
+    <canvas id="keyCanvas"></canvas>
+  </div>
+</div>
+
+<!-- Summary overlay -->
+<div class="overlay hidden" id="sumOverlay">
+  <div class="sheet">
+    <div class="row" style="justify-content:space-between"><h2>Review your scores</h2><button class="btn" id="closeSum">Back to grading</button></div>
+    <div id="sumNotice"></div>
+    <div style="overflow:auto"><table id="sumTable"></table></div>
+    <p class="small" id="sumTime"></p>
+    <p>When you're ready, open Form 1. Your scores, rubric items, times and flagged answers will be filled in. Check them, answer the remaining question, and submit. <strong>Form 1 can't be edited after you submit it.</strong></p>
+    <div class="row" style="flex-wrap:wrap">
+      <button class="btn primary" id="openForm">Open Form 1 with my scores</button>
+      <button class="btn" id="copyText">Copy results as text</button>
+      <span class="small" id="copyMsg"></span>
+    </div>
+    <p class="small" style="margin-top:16px">Want to start over? <a href="#" id="reset">Clear all scores in this browser</a>.</p>
+  </div>
+</div>
+
+<script>
+/* ---------- Configuration ---------- */
+const FORM1 = {
+  base: 'https://docs.google.com/forms/d/e/1FAIpQLSeWjJ8dz1uSMmJNByd-xbR6m0C4XzxSkOE7rNajwoc9_lu98A/viewform',
+  // entry IDs from printForm1PrefillTemplate in create_grading_forms.gs
+  totals: {'1A':'','1B':'','1C':'','1D':'','1E':'','1F':'','2A':'','2B':'','2C':'','2D':'','2E':'','2F':''},
+  detail: '',      // "Points per criterion" paragraph
+  timeBucket: '',  // "About how long did the grading take?"
+  flags: ''        // "For which answers did the rubric not clearly settle the score?"
+};
+
+// Where each answer sits in the packet (PDF points, origin top-left; letter page 612 x 792)
+const ANSWERS = [
+  {id:'1A', q:1, page:2, box:[140,113,472,285]},
+  {id:'1B', q:1, page:2, box:[140,308,472,466]},
+  {id:'1C', q:1, page:2, box:[140,489,472,674]},
+  {id:'1D', q:1, page:3, box:[140,83,472,252]},
+  {id:'1E', q:1, page:3, box:[140,275,472,438]},
+  {id:'1F', q:1, page:3, box:[140,461,472,632]},
+  {id:'2A', q:2, page:5, box:[62,113,550,180]},
+  {id:'2B', q:2, page:5, box:[62,203,550,276]},
+  {id:'2C', q:2, page:5, box:[62,299,550,366]},
+  {id:'2D', q:2, page:5, box:[62,389,550,485]},
+  {id:'2E', q:2, page:5, box:[62,508,550,590]},
+  {id:'2F', q:2, page:5, box:[62,613,550,665]}
+];
+const KEY_PAGE = {1:1, 2:4};
+const RENDER_SCALE = 2.5;
+const STORE_KEY = 'gwa-grading-v1';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ---------- State ---------- */
+let pdf = null;
+const pageCanvas = {};
+const rubric = {1:[], 2:[]};
+let state = {};
+let cur = 0;
+let keyQ = 1;
+
+function blankState(){
+  const s = {};
+  ANSWERS.forEach(a => { s[a.id] = {items:[], adj:0, note:'', flag:false, secs:0, seen:false}; });
+  return s;
+}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify({state, cur})); }catch(e){} }
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(!d || !d.state) return false;
+    const base = blankState();
+    ANSWERS.forEach(a => { if(d.state[a.id]) base[a.id] = Object.assign(base[a.id], d.state[a.id]); });
+    state = base; cur = Math.min(Math.max(d.cur|0, 0), ANSWERS.length-1);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------- PDF loading ---------- */
+const $ = id => document.getElementById(id);
+
+$('file').addEventListener('change', async ev => {
+  const f = ev.target.files[0];
+  if(!f) return;
+  const msg = $('startMsg');
+  msg.className = ''; msg.textContent = 'Reading the packet…';
+  try{
+    const buf = await f.arrayBuffer();
+    pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    const texts = {};
+    for(let p=1; p<=pdf.numPages; p++) texts[p] = await pageText(p);
+    if(pdf.numPages !== 5 || !/Activity Packet/.test(texts[1]) || !/Answer 2F/.test(texts[5])) {
+      throw new Error('This doesn’t look like the activity packet. Please choose Grading_with_AI_Activity_Packet.pdf.');
+    }
+    rubric[1] = parseRubric(texts[1]);
+    rubric[2] = parseRubric(texts[4]);
+    [1,2].forEach(q => {
+      const sum = rubric[q].reduce((t,r)=>t+r.pts,0);
+      if(!rubric[q].length || sum !== 10) throw new Error('Could not read the rubric for Question ' + q + ' from the packet.');
+    });
+    for(const p of [1,2,3,4,5]) pageCanvas[p] = await renderPage(p);
+    if(!load()) state = blankState();
+    startApp();
+  }catch(e){
+    msg.className = 'err'; msg.textContent = e.message || 'Could not open this file.';
+  }
+});
+
+async function pageText(p){
+  const page = await pdf.getPage(p);
+  const tc = await page.getTextContent();
+  return tc.items.map(i => i.str).join(' ').replace(/\s+/g,' ');
+}
+function parseRubric(text){
+  const i = text.lastIndexOf('Rubric');
+  if(i < 0) return [];
+  let t = text.slice(i + 6).replace(/Page \d+\s*$/,'');
+  const parts = t.split(/\((\d+(?:\.\d+)?) pts?\)/);
+  const out = [];
+  for(let k=1; k<parts.length; k+=2){
+    const label = parts[k+1].replace(/[•●\u007F\u0095]/g,' ').replace(/\s+/g,' ').trim();
+    out.push({pts: parseFloat(parts[k]), text: label});
+  }
+  return out;
+}
+async function renderPage(p){
+  const page = await pdf.getPage(p);
+  const vp = page.getViewport({scale: RENDER_SCALE});
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+  await page.render({canvasContext: c.getContext('2d'), viewport: vp}).promise;
+  return c;
+}
+
+/* ---------- Scoring ---------- */
+function total(id){
+  const a = ANSWERS.find(x => x.id === id), s = state[id];
+  let t = s.adj;
+  rubric[a.q].forEach((r,k) => { if(s.items[k]) t += r.pts; });
+  t = Math.round(t*2)/2;
+  return Math.min(10, Math.max(0, t));
+}
+function fmtPts(x){ return (x>0?'+':'') + String(x); }
+function fmtTime(s){ const m = Math.floor(s/60), r = s%60; return m ? m + ' min ' + r + ' s' : r + ' s'; }
+
+/* ---------- Rendering ---------- */
+function startApp(){
+  $('start').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  buildNav(); show(cur);
+}
+function buildNav(){
+  const nav = $('nav'); nav.innerHTML = '';
+  [1,2].forEach(q => {
+    const h = document.createElement('h3'); h.textContent = 'Question ' + q; nav.appendChild(h);
+    ANSWERS.forEach((a,idx) => {
+      if(a.q !== q) return;
+      const b = document.createElement('button');
+      b.className = 'navitem'; b.dataset.idx = idx;
+      b.innerHTML = '<span>' + a.id + ' <span class="flagdot"></span></span><span class="sc"></span>';
+      b.onclick = () => show(idx);
+      nav.appendChild(b);
+    });
+  });
+  refreshNav();
+}
+function refreshNav(){
+  document.querySelectorAll('.navitem').forEach(b => {
+    const a = ANSWERS[+b.dataset.idx], s = state[a.id];
+    b.classList.toggle('cur', +b.dataset.idx === cur);
+    b.classList.toggle('seen', s.seen);
+    b.querySelector('.sc').textContent = s.seen ? total(a.id) : '–';
+    b.querySelector('.flagdot').textContent = s.flag ? '⚑' : '';
+  });
+  const seen = ANSWERS.filter(a => state[a.id].seen).length;
+  const secs = ANSWERS.reduce((t,a) => t + state[a.id].secs, 0);
+  $('progress').textContent = seen + ' of ' + ANSWERS.length + ' viewed · ' + fmtTime(secs);
+}
+function show(idx){
+  cur = idx;
+  const a = ANSWERS[idx], s = state[a.id];
+  s.seen = true;
+  $('ansTitle').textContent = 'Answer ' + a.id;
+  $('ansQ').textContent = 'Question ' + a.q + ' · ' + (idx+1) + ' of ' + ANSWERS.length;
+  drawCrop($('answerCanvas'), pageCanvas[a.page], a.box);
+  const box = $('items'); box.innerHTML = '';
+  rubric[a.q].forEach((r,k) => {
+    const b = document.createElement('button');
+    b.className = 'item' + (s.items[k] ? ' on' : '');
+    b.innerHTML = '<span class="key">' + (k+1) + '</span><span class="txt"></span><span class="pts">' + r.pts + ' pts</span>';
+    b.querySelector('.txt').textContent = r.text;
+    b.onclick = () => toggle(k);
+    box.appendChild(b);
+  });
+  $('note').value = s.note;
+  $('flag').checked = s.flag;
+  $('prev').disabled = idx === 0;
+  $('next').textContent = idx === ANSWERS.length-1 ? 'Finish & review' : 'Next →';
+  refreshScore(); refreshNav(); save();
+  $('view').scrollTop = 0;
+}
+function drawCrop(canvas, src, box){
+  const [x0,y0,x1,y1] = box.map(v => v*RENDER_SCALE);
+  canvas.width = x1-x0; canvas.height = y1-y0;
+  const zoom = ANSWERS[cur].q === 1 ? 2.0 : 1.45;
+  canvas.style.width = Math.min(760, (x1-x0)/RENDER_SCALE*zoom) + 'px';
+  canvas.getContext('2d').drawImage(src, x0, y0, x1-x0, y1-y0, 0, 0, x1-x0, y1-y0);
+}
+function refreshScore(){
+  const a = ANSWERS[cur], s = state[a.id];
+  $('total').textContent = total(a.id);
+  $('adjVal').textContent = s.adj === 0 ? '0' : fmtPts(s.adj);
+  document.querySelectorAll('#items .item').forEach((b,k) => b.classList.toggle('on', !!s.items[k]));
+  $('flagBox').classList.toggle('on', s.flag);
+}
+
+/* ---------- Actions ---------- */
+function toggle(k){
+  const s = state[ANSWERS[cur].id];
+  if(k >= rubric[ANSWERS[cur].q].length) return;
+  s.items[k] = !s.items[k];
+  refreshScore(); refreshNav(); save();
+}
+function adjust(d){
+  const s = state[ANSWERS[cur].id];
+  s.adj = Math.max(-10, Math.min(10, Math.round((s.adj + d)*2)/2));
+  refreshScore(); refreshNav(); save();
+}
+function setFlag(v){
+  state[ANSWERS[cur].id].flag = v; $('flag').checked = v;
+  refreshScore(); refreshNav(); save();
+}
+function go(d){
+  const n = cur + d;
+  if(n < 0) return;
+  if(n >= ANSWERS.length){ openSummary(); return; }
+  show(n);
+}
+$('adjMinus').onclick = () => adjust(-0.5);
+$('adjPlus').onclick = () => adjust(0.5);
+$('flag').onchange = e => setFlag(e.target.checked);
+$('note').oninput = e => { state[ANSWERS[cur].id].note = e.target.value; save(); };
+$('prev').onclick = () => go(-1);
+$('next').onclick = () => go(1);
+
+document.addEventListener('keydown', e => {
+  if($('app').classList.contains('hidden')) return;
+  if(!$('keyOverlay').classList.contains('hidden') || !$('sumOverlay').classList.contains('hidden')){
+    if(e.key === 'Escape'){ closeOverlays(); }
+    return;
+  }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if(tag === 'textarea' || (tag === 'input' && e.target.type !== 'checkbox')) return;
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(/^[1-9]$/.test(e.key)){ toggle(+e.key - 1); e.preventDefault(); }
+  else if(e.key === '+' || e.key === '='){ adjust(0.5); e.preventDefault(); }
+  else if(e.key === '-' || e.key === '_'){ adjust(-0.5); e.preventDefault(); }
+  else if(e.key === 'ArrowRight'){ go(1); e.preventDefault(); }
+  else if(e.key === 'ArrowLeft'){ go(-1); e.preventDefault(); }
+  else if(e.key === 'f' || e.key === 'F'){ setFlag(!state[ANSWERS[cur].id].flag); e.preventDefault(); }
+});
+
+/* ---------- Timing: a rough record, paused when the tab is hidden or an overlay is open ---------- */
+setInterval(() => {
+  if($('app').classList.contains('hidden')) return;
+  if(document.visibilityState !== 'visible') return;
+  if(!$('keyOverlay').classList.contains('hidden') || !$('sumOverlay').classList.contains('hidden')) return;
+  state[ANSWERS[cur].id].secs += 1;
+  if(state[ANSWERS[cur].id].secs % 5 === 0) save();
+  refreshNav();
+}, 1000);
+
+/* ---------- Question & key overlay ---------- */
+function showKey(q){
+  keyQ = q;
+  const src = pageCanvas[KEY_PAGE[q]];
+  const c = $('keyCanvas');
+  c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  document.querySelectorAll('#keyOverlay .tabs .btn').forEach(b => b.classList.toggle('cur', +b.dataset.q === q));
+}
+$('showKey').onclick = () => { showKey(ANSWERS[cur].q); $('keyOverlay').classList.remove('hidden'); };
+$('closeKey').onclick = closeOverlays;
+document.querySelectorAll('#keyOverlay .tabs .btn').forEach(b => b.onclick = () => showKey(+b.dataset.q));
+function closeOverlays(){ $('keyOverlay').classList.add('hidden'); $('sumOverlay').classList.add('hidden'); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target === o) closeOverlays(); }));
+
+/* ---------- Summary and Form 1 ---------- */
+function itemList(a){
+  const s = state[a.id], on = [];
+  rubric[a.q].forEach((r,k) => { if(s.items[k]) on.push(k+1); });
+  return on;
+}
+function detailText(){
+  const secs = ANSWERS.reduce((t,a) => t + state[a.id].secs, 0);
+  const lines = ['Recorded with the grading tool. Total grading time about ' + fmtTime(secs) + '.'];
+  ANSWERS.forEach(a => {
+    const s = state[a.id], on = itemList(a);
+    let l = a.id + ': items ' + (on.length ? on.join(', ') : 'none');
+    if(s.adj) l += '; adjustment ' + fmtPts(s.adj);
+    l += '; total ' + total(a.id) + '; ' + s.secs + ' s';
+    if(s.note.trim()) l += '; note: ' + s.note.trim().replace(/\s+/g,' ');
+    lines.push(l);
+  });
+  return lines.join('\n');
+}
+function bucket(secs){
+  if(secs < 600) return 'Under 10 minutes';
+  if(secs < 1200) return '10 to 20 minutes';
+  if(secs < 1800) return '20 to 30 minutes';
+  return 'Over 30 minutes';
+}
+function formReady(){
+  return FORM1.detail && FORM1.timeBucket && FORM1.flags && ANSWERS.every(a => FORM1.totals[a.id]);
+}
+function formUrl(){
+  const p = ['usp=pp_url'];
+  const add = (entry, v) => p.push(entry + '=' + encodeURIComponent(v));
+  ANSWERS.forEach(a => add(FORM1.totals[a.id], String(total(a.id))));
+  add(FORM1.detail, detailText());
+  add(FORM1.timeBucket, bucket(ANSWERS.reduce((t,a) => t + state[a.id].secs, 0)));
+  const flagged = ANSWERS.filter(a => state[a.id].flag).map(a => a.id);
+  (flagged.length ? flagged : ['None']).forEach(id => add(FORM1.flags, id));
+  return FORM1.base + '?' + p.join('&');
+}
+function openSummary(){
+  save();
+  const rows = ['<tr><th>Answer</th><th>Rubric items</th><th>Adjustment</th><th>Total</th><th>Flagged</th><th>Time</th></tr>'];
+  ANSWERS.forEach((a,idx) => {
+    const s = state[a.id], on = itemList(a);
+    rows.push('<tr><td><a href="#" data-idx="' + idx + '">' + a.id + '</a></td><td>' + (on.length ? on.join(', ') : '–') +
+      '</td><td class="num">' + (s.adj ? fmtPts(s.adj) : '–') + '</td><td class="num"><strong>' + (s.seen ? total(a.id) : '–') +
+      '</strong></td><td>' + (s.flag ? '⚑' : '') + '</td><td class="num">' + fmtTime(s.secs) + '</td></tr>');
+  });
+  $('sumTable').innerHTML = rows.join('');
+  $('sumTable').querySelectorAll('a[data-idx]').forEach(l => l.onclick = e => { e.preventDefault(); closeOverlays(); show(+l.dataset.idx); });
+  const unseen = ANSWERS.filter(a => !state[a.id].seen).map(a => a.id);
+  $('sumNotice').innerHTML = unseen.length ? '<div class="notice">You haven’t looked at ' + unseen.join(', ') + ' yet. Grade every answer before opening the form.</div>' : '';
+  if(!formReady()) $('sumNotice').innerHTML += '<div class="notice">The link to Form 1 isn’t set up yet. Use “Copy results as text” and paste your scores into the form.</div>';
+  $('openForm').disabled = unseen.length > 0 || !formReady();
+  const secs = ANSWERS.reduce((t,a) => t + state[a.id].secs, 0);
+  $('sumTime').textContent = 'Total grading time: about ' + fmtTime(secs) + '. Time is counted only while this tab is in front, so it is a rough estimate.';
+  $('copyMsg').textContent = '';
+  $('sumOverlay').classList.remove('hidden');
+}
+$('finish').onclick = openSummary;
+$('closeSum').onclick = closeOverlays;
+$('openForm').onclick = () => { window.open(formUrl(), '_blank', 'noopener'); };
+$('copyText').onclick = async () => {
+  try{ await navigator.clipboard.writeText(detailText()); $('copyMsg').textContent = 'Copied.'; }
+  catch(e){ $('copyMsg').textContent = 'Copy failed; select the table and copy it instead.'; }
+};
+$('reset').onclick = e => {
+  e.preventDefault();
+  if(!window.confirm('Clear all scores and times saved in this browser?')) return;
+  try{ localStorage.removeItem(STORE_KEY); }catch(err){}
+  state = blankState(); cur = 0; closeOverlays(); buildNav(); show(0);
+};
+</script>
+</body>
+</html>
