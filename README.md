@@ -23,7 +23,7 @@ The activity takes anywhere from 15 to 45 minutes, depending on how much you eng
 1. **Grade by hand first.** Open the [grading tool](https://grondinaucsd.github.io/grading_with_ai/app/) and load the packet PDF you downloaded. It works like Gradescope: one answer at a time, rubric items you click, and a point adjustment in half-point steps. It keeps a rough record of your time per answer, and when you finish it opens Form 1 with your scores filled in. The packet stays on your computer and is never uploaded. Submit Form 1 before using any AI, since seeing the AI's scores first would shape your own. (If you prefer, grade from the PDF and fill in Form 1 yourself.)
 2. **Baseline AI grading.** Open a new chat, upload the activity packet PDF, and paste in Prompt A. Record the AI's totals.
 3. **Repeat run (optional).** Open a second new chat, upload the same PDF, paste Prompt A again, and record the new totals. Differences between the two runs show how consistent the AI is with itself.
-4. **Review the rubric with the AI.** Back in the chat from step 2, paste in Prompt B and work through it with the AI, which takes about 15–20 minutes. Prompt B ends with a link that opens Form 2 with all the AI's scores already filled in.
+4. **Review the rubric with the AI.** Back in the chat from step 2, paste in Prompt B and work through it with the AI, which takes about 15–20 minutes. When the AI asks for your scores, reopen the grading tool (load the packet again if needed), click **Finish & review**, then **Copy my scores for the AI chat**, and paste them in. Prompt B ends with a link that opens Form 2 with all the AI's scores already filled in.
 
 ## Prompt A: baseline grading
 

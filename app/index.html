@@ -178,9 +178,11 @@ td.num{font-variant-numeric:tabular-nums}
     <p>When you're ready, open Form 1. Your scores, rubric items, times and flagged answers will be filled in. Check them, answer the remaining question, and submit. <strong>Form 1 can't be edited after you submit it.</strong></p>
     <div class="row" style="flex-wrap:wrap">
       <button class="btn primary" id="openForm">Open Form 1 with my scores</button>
-      <button class="btn" id="copyText">Copy results as text</button>
+      <button class="btn" id="copyAI">Copy my scores for the AI chat</button>
+      <button class="btn" id="copyText">Copy results for the form</button>
       <span class="small" id="copyMsg"></span>
     </div>
+    <p class="small">For step 4 (Prompt B), when the AI asks for your scores, come back to this screen, click <strong>Copy my scores for the AI chat</strong>, and paste into the chat.</p>
     <p class="small" style="margin-top:16px">Want to start over? <a href="#" id="reset">Clear all scores in this browser</a>.</p>
   </div>
 </div>
@@ -492,6 +494,21 @@ function detailText(){
   });
   return lines.join('\n');
 }
+function aiText(){
+  const lines = ['My scores (totals out of 10), with the points I gave for each rubric criterion in rubric order:'];
+  ANSWERS.forEach(a => {
+    const s = state[a.id];
+    const crit = rubric[a.q].map((r,k) => s.items[k] ? r.pts : 0).join(', ');
+    let l = a.id + ': total ' + total(a.id) + ' (criteria: ' + crit;
+    if(s.adj) l += '; adjustment ' + fmtPts(s.adj);
+    l += ')';
+    if(s.note.trim()) l += '. My note: ' + s.note.trim().replace(/\s+/g,' ');
+    lines.push(l);
+  });
+  const flagged = ANSWERS.filter(a => state[a.id].flag).map(a => a.id);
+  lines.push('Answers where I felt the rubric did not clearly settle the score: ' + (flagged.length ? flagged.join(', ') : 'none') + '.');
+  return lines.join('\n');
+}
 function bucket(secs){
   if(secs < 600) return 'Under 10 minutes';
   if(secs < 1200) return '10 to 20 minutes';
@@ -534,6 +551,11 @@ function openSummary(){
 $('finish').onclick = openSummary;
 $('closeSum').onclick = closeOverlays;
 $('openForm').onclick = () => { window.open(formUrl(), '_blank', 'noopener'); };
+async function copy(txt, label){
+  try{ await navigator.clipboard.writeText(txt); $('copyMsg').textContent = label; }
+  catch(e){ $('copyMsg').textContent = 'Copy failed; select the table and copy it instead.'; }
+}
+$('copyAI').onclick = () => copy(aiText(), 'Copied. Paste it into the AI chat.');
 $('copyText').onclick = async () => {
   try{ await navigator.clipboard.writeText(detailText()); $('copyMsg').textContent = 'Copied.'; }
   catch(e){ $('copyMsg').textContent = 'Copy failed; select the table and copy it instead.'; }
